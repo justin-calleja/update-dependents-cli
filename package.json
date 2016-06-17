@@ -1,7 +1,7 @@
 {
   "name": "update-dependents-cli",
   "version": "0.0.1",
-  "description": "",
+  "description": "The cli interface for update-dependents",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -9,6 +9,7 @@
     "update-dependents": "./cli.js"
   },
   "keywords": [],
+  "repository": "https://github.com/justin-calleja/update-dependents-cli",
   "author": "Justin Calleja <calleja.justin@gmail.com>",
   "license": "ISC",
   "dependencies": {
