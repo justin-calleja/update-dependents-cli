@@ -1,6 +1,6 @@
 {
   "name": "update-dependents-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "The cli interface for update-dependents",
   "scripts": {
     "postversion": "git push origin master && git push --tags",
