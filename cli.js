@@ -5,7 +5,7 @@ var chalk = require('chalk');
 var fs = require('fs');
 var path = require('path');
 var updateDependents = require('update-dependents').default;
-var pkgJSONInfoDict = require('pkg-json-info-dict').pkgJSONInfoDict;
+var readPkgJSONInfoDict = require('pkg-json-info-dict').readPkgJSONInfoDict;
 var pkgDependents = require('pkg-dependents');
 
 const cli = meow(`
@@ -62,17 +62,22 @@ var newVersion = cli.flags.n;
 var isDryRun = cli.flags.dryRun || false;
 if (isDryRun) console.log(chalk.red('This is a dry run…'));
 
-pkgJSONInfoDict(paths, (err, result) => {
+readPkgJSONInfoDict(paths, (err, result) => {
   if (Object.keys(result).length === 0) {
     console.log(`Not able to find info on package ${pkgName} in the paths: ${paths}`);
     process.exit(-1);
   }
   var dependents = pkgDependents.dependentsOf(pkgName, result);
+  if (pkgDependents.countDependents(dependents) === 0) {
+    console.log(`${pkgName} has no dependents to update`);
+    process.exit(0);
+  }
   // console.log(dependents);
   // if new version is not given in cli opts, read it from file
   if (!newVersion) {
-    var pkgJSON = JSON.parse(fs.readFileSync(result.absPath).toString());
+    var pkgJSON = JSON.parse(fs.readFileSync(path.join(result[pkgName].absPath, 'package.json')).toString());
     newVersion = pkgJSON.version;
+    console.log(`Read ${pkgName}'s package.json and found version ${pkgJSON.version}`);
     if (!newVersion) {
       console.log('Not able to find a new version to update to');
       process.exit(-1);
@@ -84,13 +89,15 @@ pkgJSONInfoDict(paths, (err, result) => {
     var originalPkgJSONInfo = dependents.dependencyDependents[key];
     var updatedPkgJSONInfo = dependentsUpdated.dependencyDependents[key];
 
-    if (originalPkgJSONInfo && originalPkgJSONInfo.pkgJSON.dependencies[pkgName] !== updatedPkgJSONInfo.pkgJSON.dependencies[pkgName]) {
+    if (originalPkgJSONInfo.pkgJSON.dependencies[pkgName] !== updatedPkgJSONInfo.pkgJSON.dependencies[pkgName]) {
       if (isDryRun) {
         console.log(`would update ${originalPkgJSONInfo.pkgJSON.name}.${chalk.blue('dependencies')}.${pkgName} from ${originalPkgJSONInfo.pkgJSON.dependencies[pkgName]} to ${updatedPkgJSONInfo.pkgJSON.dependencies[pkgName]}`);
       } else {
         fs.writeFileSync(path.join(updatedPkgJSONInfo.absPath, 'package.json'), JSON.stringify(updatedPkgJSONInfo.pkgJSON, null, 2));
         console.log(`updated ${updatedPkgJSONInfo.pkgJSON.name}.${chalk.blue('dependencies')}.${pkgName} from ${originalPkgJSONInfo.pkgJSON.dependencies[pkgName]} to ${updatedPkgJSONInfo.pkgJSON.dependencies[pkgName]}`);
       }
+    } else {
+      console.log(`${key} does not need updating in dependent ${updatedPkgJSONInfo.pkgJSON.name}`);
     }
   });
 
@@ -98,13 +105,15 @@ pkgJSONInfoDict(paths, (err, result) => {
     var originalPkgJSONInfo = dependents.peerDependencyDependents[key];
     var updatedPkgJSONInfo = dependentsUpdated.peerDependencyDependents[key];
 
-    if (originalPkgJSONInfo && originalPkgJSONInfo.pkgJSON.peerDependencies[pkgName] !== updatedPkgJSONInfo.pkgJSON.peerDependencies[pkgName]) {
+    if (originalPkgJSONInfo.pkgJSON.peerDependencies[pkgName] !== updatedPkgJSONInfo.pkgJSON.peerDependencies[pkgName]) {
       if (isDryRun) {
         console.log(`would update ${originalPkgJSONInfo.pkgJSON.name}.${chalk.green('peerDependencies')}.${pkgName} from ${originalPkgJSONInfo.pkgJSON.peerDependencies[pkgName]} to ${updatedPkgJSONInfo.pkgJSON.peerDependencies[pkgName]}`);
       } else {
         fs.writeFileSync(path.join(updatedPkgJSONInfo.absPath, 'package.json'), JSON.stringify(updatedPkgJSONInfo.pkgJSON, null, 2));
         console.log(`updated ${updatedPkgJSONInfo.pkgJSON.name}.${chalk.green('peerDependencies')}.${pkgName} from ${originalPkgJSONInfo.pkgJSON.peerDependencies[pkgName]} to ${updatedPkgJSONInfo.pkgJSON.peerDependencies[pkgName]}`);
       }
+    } else {
+      console.log(`${key} does not need updating in dependent ${updatedPkgJSONInfo.pkgJSON.name}`);
     }
   });
 
@@ -112,13 +121,15 @@ pkgJSONInfoDict(paths, (err, result) => {
     var originalPkgJSONInfo = dependents.devDependencyDependents[key];
     var updatedPkgJSONInfo = dependentsUpdated.devDependencyDependents[key];
 
-    if (originalPkgJSONInfo && originalPkgJSONInfo.pkgJSON.devDependencies[pkgName] !== updatedPkgJSONInfo.pkgJSON.devDependencies[pkgName]) {
+    if (originalPkgJSONInfo.pkgJSON.devDependencies[pkgName] !== updatedPkgJSONInfo.pkgJSON.devDependencies[pkgName]) {
       if (isDryRun) {
         console.log(`would update ${originalPkgJSONInfo.pkgJSON.name}.${chalk.red('devDependencies')}.${pkgName} from ${originalPkgJSONInfo.pkgJSON.devDependencies[pkgName]} to ${updatedPkgJSONInfo.pkgJSON.devDependencies[pkgName]}`);
       } else {
         fs.writeFile(path.join(updatedPkgJSONInfo.absPath, 'package.json'), JSON.stringify(updatedPkgJSONInfo.pkgJSON, null, 2));
         console.log(`updated ${updatedPkgJSONInfo.pkgJSON.name}.${chalk.red('devDependencies')}.${pkgName} from ${originalPkgJSONInfo.pkgJSON.devDependencies[pkgName]} to ${updatedPkgJSONInfo.pkgJSON.devDependencies[pkgName]}`);
       }
+    } else {
+      console.log(`${key} does not need updating in dependent ${updatedPkgJSONInfo.pkgJSON.name}`);
     }
   });
 });
