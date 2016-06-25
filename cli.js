@@ -4,7 +4,7 @@ var meow = require('meow');
 var chalk = require('chalk');
 var fs = require('fs');
 var path = require('path');
-var updateDependents = require('update-dependents').default;
+var updateDependents = require('update-dependents').updateDependents;
 var readPkgJSONInfoDict = require('pkg-json-info-dict').readPkgJSONInfoDict;
 var pkgDependents = require('pkg-dependents');
 

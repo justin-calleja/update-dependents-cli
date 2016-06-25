@@ -16,7 +16,7 @@
   "dependencies": {
     "chalk": "^1.1.3",
     "meow": "^3.7.0",
-    "update-dependents": "~0.0.4",
+    "update-dependents": "~0.0.5",
     "pkg-dependents": "~0.0.11",
     "pkg-json-info-dict": "~0.0.5"
   }
